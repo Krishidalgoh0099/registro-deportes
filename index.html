@@ -46,6 +46,13 @@ input[type=date]::-webkit-date-and-time-value{text-align:left;margin:0;min-width
 input[type=date]::-webkit-datetime-edit{padding:0}
 .dw{position:relative;height:44px;overflow:hidden;border-radius:10px;background:var(--field);border:1px solid var(--line);min-width:0;width:100%}
 .dw input[type=date]{position:absolute;left:0;top:0;right:0;bottom:0;width:100%;height:100%;border:0;border-radius:0;background:transparent;padding:0 12px;margin:0;display:block}
+.exr{border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:8px;background:var(--field)}
+.exr select,.exr input{background:var(--card)}
+.exr-top{display:grid;grid-template-columns:1fr 34px;gap:6px;align-items:center}
+.exr-top button{border:0;background:none;color:var(--mute);font-size:18px;cursor:pointer}
+.exr-nums{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px}
+.exr-nums small{display:block;font-size:11px;color:var(--mute);margin-bottom:3px}
+.exr-nums input{padding:9px 8px;font-size:15px}
 input:focus,select:focus{outline:2px solid var(--accent);outline-offset:0}
 .row{display:flex;gap:10px}.row>*{flex:1;min-width:0}
 .btn{width:100%;border:0;background:var(--accent);color:var(--accent-ink);padding:13px;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;margin-top:14px;font-family:inherit}
@@ -110,7 +117,7 @@ svg text{fill:var(--mute);font-size:10px;font-family:inherit}
 <body>
 <div class="wrap">
   <h1>Registro de Deportes</h1>
-  <div class="sub" id="status">Guardado en este dispositivo · v5</div>
+  <div class="sub" id="status">Guardado en este dispositivo · v6</div>
   <div id="view"></div>
 </div>
 <nav class="tabs"><div id="tabs"></div></nav>
@@ -143,11 +150,26 @@ var INTENS = {1:"Ligera",2:"Moderada",3:"Intensa"};
 var FUT = {1:{label:"Recreativo (pichanga)",met:7},2:{label:"Intermedio (fútbol 7 / baby)",met:8.5},3:{label:"Competitivo (11 vs 11)",met:10}};
 var LS_KEY = "registro-deportes-v1";
 
+var MUSCLES = {
+  "Pecho":["Press banca plano (barra)","Press banca inclinado (barra)","Press mancuernas plano","Press mancuernas inclinado","Aperturas con mancuernas","Cruces en polea","Peck deck / contractor","Press en máquina","Fondos en paralelas (pecho)","Flexiones"],
+  "Espalda":["Dominadas","Jalón al pecho","Remo con barra","Remo con mancuerna","Remo en polea baja","Remo en máquina","Remo en T","Pullover en polea","Peso muerto","Hiperextensiones"],
+  "Hombros":["Press militar (barra)","Press mancuernas sentado","Press Arnold","Elevaciones laterales","Elevaciones frontales","Pájaros (deltoide posterior)","Face pull","Encogimientos (trapecio)"],
+  "Bíceps":["Curl con barra","Curl mancuernas alterno","Curl martillo","Curl predicador","Curl en polea","Curl concentrado","Curl inclinado"],
+  "Tríceps":["Press francés","Extensión en polea (pushdown)","Extensión con cuerda","Fondos en banco","Fondos en paralelas (tríceps)","Press banca agarre cerrado","Extensión sobre la cabeza (mancuerna)","Patada de tríceps"],
+  "Antebrazo":["Curl de muñeca","Curl inverso","Paseo del granjero"],
+  "Cuádriceps":["Sentadilla con barra","Sentadilla frontal","Sentadilla goblet","Prensa de piernas","Extensión de cuádriceps","Sentadilla búlgara","Zancadas","Hack squat"],
+  "Isquiotibiales":["Peso muerto rumano","Curl femoral tumbado","Curl femoral sentado","Peso muerto piernas rígidas","Buenos días"],
+  "Glúteos":["Hip thrust","Puente de glúteos","Patada de glúteo en polea","Abducción de cadera","Sentadilla sumo","Step-up"],
+  "Pantorrillas":["Elevación de talones de pie","Elevación de talones sentado","Pantorrillas en prensa"],
+  "Abdomen":["Crunch","Plancha","Elevación de piernas","Rueda abdominal","Crunch en polea","Russian twist"],
+  "Cuerpo completo":["Burpees","Kettlebell swing","Thruster","Clean & press"]
+};
+
 /* ---------- Estado ---------- */
 var state = {profile:{height:"",net:false,age:"",sex:""},weights:[],goals:{kcal:"",sessions:""},workouts:[],updatedAt:0};
 var ui = {tab:"resumen",range:7,type:"walk",gymRows:[blankRow()],confirmDel:null,editId:null};
 
-function blankRow(){return {n:"",s:"",r:"",k:""};}
+function blankRow(){return {m:"",e:"",n:"",s:"",r:"",k:""};}
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
 function $(id){return document.getElementById(id);}
 function num(v){var n=parseFloat(String(v==null?"":v).trim().replace(",","."));return isFinite(n)?n:NaN;}
@@ -352,7 +374,7 @@ function viewRegistrar(){
     h+='<label for="f-min">Duración total (minutos)</label>'+tin("f-min","Ej: 60")
      +'<label for="f-kind">Tipo de entrenamiento</label><select id="f-kind">'+opts(GYM_KINDS,"pesas")+'</select>'
      +'<label for="f-int">Intensidad</label><select id="f-int"><option value="1">Ligera (conversas fácil, descansos largos)</option><option value="2" selected>Moderada</option><option value="3">Intensa (descansos cortos, sin conversar)</option></select>'
-     +'<label>Ejercicios (opcional)</label><div class="exh"><span>Ejercicio</span><span>Series</span><span>Reps</span><span>Kg</span><span></span></div><div id="exrows">'+gymRowsHtml()+'</div>'
+     +'<label>Ejercicios (opcional)</label><div id="exrows">'+gymRowsHtml()+'</div>'
      +'<button class="btn ghost small" id="addex" type="button" style="margin-top:6px">＋ Agregar ejercicio</button>';
   }else{
     h+='<label for="f-min">Minutos jugados</label>'+tin("f-min","Ej: 60")
@@ -369,11 +391,15 @@ function viewRegistrar(){
 }
 function gymRowsHtml(){
   return ui.gymRows.map(function(r,i){
-    return '<div class="ex"><input data-ex="n" data-i="'+i+'" value="'+esc(r.n)+'" placeholder="Ej: Press banca" maxlength="40">'
-     +'<input data-ex="s" data-i="'+i+'" data-dec="1" value="'+esc(r.s)+'" type="text" inputmode="numeric" placeholder="3">'
-     +'<input data-ex="r" data-i="'+i+'" data-dec="1" value="'+esc(r.r)+'" type="text" inputmode="numeric" placeholder="10">'
-     +'<input data-ex="k" data-i="'+i+'" data-dec="1" value="'+esc(r.k)+'" type="text" inputmode="decimal" placeholder="40">'
-     +'<button type="button" data-rmex="'+i+'" aria-label="Quitar">✕</button></div>';
+    var list=r.m&&MUSCLES[r.m]?MUSCLES[r.m]:[];
+    var mo='<option value="">Músculo…</option>'+Object.keys(MUSCLES).map(function(k){return '<option value="'+esc(k)+'"'+(r.m===k?" selected":"")+'>'+esc(k)+'</option>';}).join("");
+    var eo='<option value="">'+(r.m?"Ejercicio…":"Elige un músculo primero")+'</option>'+list.map(function(x){return '<option value="'+esc(x)+'"'+(r.e===x?" selected":"")+'>'+esc(x)+'</option>';}).join("")+'<option value="__otro"'+(r.e==="__otro"?" selected":"")+'>Otro (escribir)…</option>';
+    return '<div class="exr"><div class="exr-top"><select data-ex="m" data-i="'+i+'">'+mo+'</select><button type="button" data-rmex="'+i+'" aria-label="Quitar ejercicio">✕</button></div>'
+      +'<select data-ex="e" data-i="'+i+'" style="margin-top:6px">'+eo+'</select>'
+      +(r.e==="__otro"?'<input data-ex="n" data-i="'+i+'" value="'+esc(r.n)+'" placeholder="Nombre del ejercicio" maxlength="40" style="margin-top:6px">':"")
+      +'<div class="exr-nums"><div><small>Series</small><input data-ex="s" data-i="'+i+'" data-dec="1" value="'+esc(r.s)+'" type="text" inputmode="numeric" placeholder="3"></div>'
+      +'<div><small>Reps</small><input data-ex="r" data-i="'+i+'" data-dec="1" value="'+esc(r.r)+'" type="text" inputmode="numeric" placeholder="10"></div>'
+      +'<div><small>Kg</small><input data-ex="k" data-i="'+i+'" data-dec="1" value="'+esc(r.k)+'" type="text" inputmode="decimal" placeholder="40"></div></div></div>';
   }).join("");
 }
 function readForm(){
@@ -406,7 +432,7 @@ function readForm(){
   }else if(t==="gym"){
     var kind=$("f-kind").value,it=+$("f-int").value;
     met=GYM_KINDS[kind].met[it];d.kind=kind;d.int=it;
-    var ex=[];ui.gymRows.forEach(function(r){var n=String(r.n||"").trim();if(!n)return;ex.push({n:n.slice(0,40),s:num(r.s)||0,r:num(r.r)||0,k:num(r.k)||0,rs:String(r.s||""),rr:String(r.r||""),rk:String(r.k||"")});});
+    var ex=[];ui.gymRows.forEach(function(r){var n=String(r.n||"").trim();if(!n)return;ex.push({m:r.m||"",n:n.slice(0,40),s:num(r.s)||0,r:num(r.r)||0,k:num(r.k)||0,rs:String(r.s||""),rr:String(r.r||""),rk:String(r.k||"")});});
     if(ex.length)d.ex=ex;
   }else{
     var lv=+$("f-fut").value;met=FUT[lv].met;d.lv=lv;
@@ -444,7 +470,7 @@ function prefill(w){
 function startEdit(id){
   var w=state.workouts.filter(function(x){return x.id===id;})[0];if(!w)return;
   ui.editId=id;ui.type=w.type;ui.tab="registrar";
-  ui.gymRows=(w.d&&w.d.ex&&w.d.ex.length)?w.d.ex.map(function(e){return {n:e.n,s:e.rs!=null?e.rs:String(e.s||""),r:e.rr!=null?e.rr:String(e.r||""),k:e.rk!=null?e.rk:String(e.k||"")};}):[blankRow()];
+  ui.gymRows=(w.d&&w.d.ex&&w.d.ex.length)?w.d.ex.map(function(e){var m=e.m&&MUSCLES[e.m]?e.m:"";var inCat=m&&MUSCLES[m].indexOf(e.n)>=0;return {m:m,e:inCat?e.n:"__otro",n:e.n,s:e.rs!=null?e.rs:String(e.s||""),r:e.rr!=null?e.rr:String(e.r||""),k:e.rk!=null?e.rk:String(e.k||"")};}):[blankRow()];
   render();prefill(w);window.scrollTo(0,0);
 }
 function saveWorkout(){
@@ -487,7 +513,7 @@ function viewHistorial(){
     var T=TYPES[w.type];
     var ex="";
     if(w.d&&w.d.ex){ex='<div class="dd">'+w.d.ex.map(function(e){
-      var s=esc(e.n);if(e.s&&e.r)s+=" "+e.s+"×"+e.r;if(e.k)s+=" @ "+fmt(e.k,1)+" kg";return s;}).join(" · ")+'</div>';
+      var s=(e.m?esc(e.m)+": ":"")+esc(e.n);if(e.s&&e.r)s+=" "+e.s+"×"+e.r;if(e.k)s+=" @ "+fmt(e.k,1)+" kg";return s;}).join(" · ")+'</div>';
       var vol=w.d.ex.reduce(function(a,e){return a+e.s*e.r*e.k;},0);
       if(vol>0)ex+='<div class="dd">Volumen total: '+fmt(vol)+' kg</div>';}
     var sure=ui.confirmDel===w.id;
@@ -568,7 +594,7 @@ function viewPerfil(){
    +'<button class="btn" id="bk" style="margin-top:12px">Descargar respaldo (JSON)</button>'
    +'<label class="btn ghost" for="rs" style="display:block;text-align:center;cursor:pointer">Restaurar respaldo</label><input id="rs" type="file" accept="application/json,.json" class="hide">'
    +'<button class="btn ghost" id="csv">Copiar historial (CSV)</button></div>'
-   +'<div class="card"><h2>Versión v5</h2><div class="sub">Si publiqué cambios y no los ves, toca el botón. No borra tus datos.</div><button class="btn ghost" id="upd">Buscar actualización</button></div>';
+   +'<div class="card"><h2>Versión v6</h2><div class="sub">Si publiqué cambios y no los ves, toca el botón. No borra tus datos.</div><button class="btn ghost" id="upd">Buscar actualización</button></div>';
 }
 function csv(){
   var rows=[["fecha","tipo","minutos","kcal","met","detalle","nota"]];
@@ -633,7 +659,7 @@ function refreshInfo(){var n=$("p-info");if(n)n.innerHTML=infoHtml();}
 document.addEventListener("input",function(e){
   var el=e.target;
   if(el.dataset&&el.dataset.dec){var c=el.value.replace(/[^0-9.,]/g,"");if(c!==el.value)el.value=c;}
-  if(el.dataset&&el.dataset.ex!==undefined){ui.gymRows[+el.dataset.i][el.dataset.ex]=el.value;updatePreview();return;}
+  if(el.dataset&&el.dataset.ex!==undefined){if(el.tagName==="SELECT")return;ui.gymRows[+el.dataset.i][el.dataset.ex]=el.value;updatePreview();return;}
   if(el.id==="p-w"){var kg=num(el.value);if(kg>=25&&kg<=300&&Math.abs(kg-(currentWeight()||0))>1e-9){upsertWeight(today(),kg);persist();refreshInfo();}return;}
   if(el.id==="p-h"){state.profile.height=el.value;persist();refreshInfo();return;}
   if(el.id==="p-age"){state.profile.age=el.value;persist();refreshInfo();return;}
@@ -643,6 +669,12 @@ document.addEventListener("input",function(e){
 });
 document.addEventListener("change",function(e){
   var el=e.target;
+  if(el.dataset&&el.dataset.ex!==undefined&&el.tagName==="SELECT"){
+    var row=ui.gymRows[+el.dataset.i];
+    if(el.dataset.ex==="m"){row.m=el.value;row.e="";row.n="";}
+    else{row.e=el.value;row.n=(el.value&&el.value!=="__otro")?el.value:"";}
+    $("exrows").innerHTML=gymRowsHtml();updatePreview();return;
+  }
   if(el.id==="rs"&&el.files&&el.files[0]){
     var fr=new FileReader();
     fr.onload=function(){
