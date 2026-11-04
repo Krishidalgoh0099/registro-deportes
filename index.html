@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f7a5a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Deportes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>Registro de Deportes</title>
+<style>
+:root{
+  --bg:#f5f6f4;--card:#ffffff;--ink:#1c2420;--mute:#66726b;--line:#e3e7e3;--accent:#1f7a5a;--accent-ink:#ffffff;
+  --walk:#2f7fc1;--gym:#e0772f;--fut:#3d9a47;--danger:#c0392b;--field:#f0f2ef;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#121614;--card:#1b211e;--ink:#eaf0ec;--mute:#93a099;--line:#2a332e;--accent:#4cc79b;--accent-ink:#0c1a14;
+  --walk:#5aa6e6;--gym:#f09a5a;--fut:#69c274;--danger:#ef7a6c;--field:#242c28;}
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+body{padding-bottom:84px;padding-top:env(safe-area-inset-top)}
+.wrap{max-width:560px;margin:0 auto;padding:16px}
+h1{font-size:20px;margin:4px 0 2px}
+h2{font-size:16px;margin:0 0 10px}
+.sub{color:var(--mute);font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin:12px 0}
+.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;justify-content:center;z-index:5;padding-bottom:env(safe-area-inset-bottom)}
+.tabs div{display:flex;width:100%;max-width:560px}
+.tabs button{flex:1;border:0;background:none;color:var(--mute);padding:10px 4px 9px;font-size:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
+.tabs button span{font-size:20px;line-height:1}
+.tabs button.on{color:var(--accent);font-weight:600}
+.seg{display:flex;gap:6px;margin:8px 0}
+.seg button{flex:1;border:1px solid var(--line);background:var(--field);color:var(--ink);padding:10px 4px;border-radius:10px;font-size:14px;cursor:pointer}
+.seg button.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+label{display:block;font-size:13px;color:var(--mute);margin:10px 0 4px}
+input,select{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:var(--field);color:var(--ink);font-size:16px;font-family:inherit}
+input:focus,select:focus{outline:2px solid var(--accent);outline-offset:0}
+.row{display:flex;gap:10px}.row>*{flex:1;min-width:0}
+.btn{width:100%;border:0;background:var(--accent);color:var(--accent-ink);padding:13px;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;margin-top:14px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.ghost{background:var(--field);color:var(--ink);font-weight:500;margin-top:8px}
+.btn.small{width:auto;padding:8px 12px;font-size:14px;margin:0}
+.preview{margin-top:14px;padding:12px;border-radius:12px;background:var(--field);display:flex;justify-content:space-between;align-items:center;gap:10px}
+.preview b{font-size:26px}
+.preview .t{font-size:12px;color:var(--mute)}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{background:var(--field);border-radius:12px;padding:12px}
+.tile b{display:block;font-size:22px}
+.tile span{font-size:12px;color:var(--mute)}
+.chart{display:flex;align-items:flex-end;gap:3px;height:130px;margin-top:8px}
+.col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%;min-width:0}
+.col .bar{display:flex;flex-direction:column-reverse;border-radius:4px 4px 0 0;overflow:hidden}
+.axis{display:flex;gap:3px;margin-top:4px}
+.axis span{flex:1;text-align:center;font-size:11px;color:var(--mute);min-width:0;overflow:hidden}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px}
+.legend{font-size:12px;color:var(--mute);margin-top:10px;display:flex;gap:12px;flex-wrap:wrap}
+.day{font-size:13px;color:var(--mute);margin:16px 2px 6px;text-transform:capitalize;display:flex;justify-content:space-between}
+.item{display:flex;gap:12px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:8px}
+.ico{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex:none}
+.item .main{flex:1;min-width:0}
+.item .tt{font-weight:600}
+.item .dd{font-size:13px;color:var(--mute);overflow-wrap:anywhere}
+.item .kc{text-align:right;flex:none}
+.item .kc b{font-size:18px;display:block}
+.item .kc small{color:var(--mute);font-size:11px}
+.del{border:0;background:none;color:var(--mute);font-size:12px;cursor:pointer;padding:4px 0 0;text-decoration:underline}
+.del.sure{color:var(--danger);font-weight:600}
+.ex{display:grid;grid-template-columns:2.2fr 1fr 1fr 1fr 28px;gap:6px;margin-bottom:6px;align-items:center}
+.ex input{padding:9px 8px;font-size:15px}
+.ex button{border:0;background:none;color:var(--mute);font-size:18px;cursor:pointer}
+.exh{display:grid;grid-template-columns:2.2fr 1fr 1fr 1fr 28px;gap:6px;font-size:11px;color:var(--mute)}
+.note{font-size:12px;color:var(--mute);margin-top:8px}
+.warn{font-size:13px;color:var(--danger);margin-top:8px}
+.empty{text-align:center;color:var(--mute);padding:28px 10px}
+.toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:20px;font-size:14px;z-index:9;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.on{opacity:1}
+.chk{display:flex;gap:10px;align-items:flex-start;margin-top:14px;font-size:14px;color:var(--ink)}
+.chk input{width:20px;height:20px;margin-top:2px;flex:none}
+.hide{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Registro de Deportes</h1>
+  <div class="sub" id="status">Cargando…</div>
+  <div id="view"></div>
+</div>
+<nav class="tabs"><div id="tabs"></div></nav>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------- Constantes ---------- */
+var TYPES = {
+  walk:{label:"Caminata",icon:"🚶",color:"var(--walk)"},
+  gym:{label:"Gym",icon:"🏋️",color:"var(--gym)"},
+  football:{label:"Fútbol",icon:"⚽",color:"var(--fut)"}
+};
+var WALK_PACE = {lento:{label:"Lento (~3,5 km/h)",v:3.5},normal:{label:"Normal (~5 km/h)",v:5},rapido:{label:"Rápido (~6,5 km/h)",v:6.5}};
+var GYM_KINDS = {
+  pesas:{label:"Pesas / fuerza",met:{1:3.5,2:4.5,3:6}},
+  cardio:{label:"Cardio (bici, elíptica, trotadora)",met:{1:4.5,2:6.5,3:8.5}},
+  funcional:{label:"Funcional / HIIT / circuito",met:{1:5,2:7,3:9}}
+};
+var INTENS = {1:"Ligera",2:"Moderada",3:"Intensa"};
+var FUT = {1:{label:"Recreativo (pichanga)",met:7},2:{label:"Intermedio (fútbol 7 / baby)",met:8.5},3:{label:"Competitivo (11 vs 11)",met:10}};
+var LS_KEY = "registro-deportes-v1";
+
+/* ---------- Estado ---------- */
+var state = {profile:{weight:"",height:"",net:false},workouts:[],updatedAt:0};
+var ui = {tab:"resumen",range:7,type:"walk",gymRows:[{n:"",s:"",r:"",k:""}],confirmDel:null};
+var docRef = null, storeMode = "local", saving = Promise.resolve();
+
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+function $(id){return document.getElementById(id);}
+function num(v){var n=parseFloat(String(v).replace(",","."));return isFinite(n)?n:NaN;}
+function fmt(n,d){return n.toLocaleString("es-CL",{minimumFractionDigits:d||0,maximumFractionDigits:d||0});}
+function pad(n){return (n<10?"0":"")+n;}
+function dstr(d){return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());}
+function today(){return dstr(new Date());}
+function parseD(s){var p=s.split("-");return new Date(+p[0],+p[1]-1,+p[2]);}
+function toast(t){var el=$("toast");el.textContent=t;el.classList.add("on");setTimeout(function(){el.classList.remove("on");},1800);}
+
+/* ---------- Cálculo de calorías ---------- */
+function walkMet(kmh){
+  var v = kmh*1000/60; // m/min
+  var vo2 = kmh>8 ? 0.2*v+3.5 : 0.1*v+3.5; // ACSM caminar / correr, terreno plano
+  return vo2/3.5;
+}
+function kcalCalc(met,kg,min,net){
+  var m = net ? Math.max(met-1,0) : met;
+  return m*kg*(min/60);
+}
+function kcalOf(w){return kcalCalc(w.met,w.kg,w.minutes,state.profile.net);}
+function profileOk(){var p=state.profile;return num(p.weight)>=25 && num(p.weight)<=300 && num(p.height)>=100 && num(p.height)<=250;}
+
+/* ---------- Persistencia ---------- */
+function setStatus(){
+  var t = storeMode==="cloud" ? "Guardado en tu cuenta" : storeMode==="error" ? "No se pudo sincronizar; los datos quedan en este navegador" : "Guardado en este dispositivo";
+  $("status").textContent = t;
+}
+function lsRead(){try{var r=localStorage.getItem(LS_KEY);return r?JSON.parse(r):null;}catch(e){return null;}}
+function lsWrite(){try{localStorage.setItem(LS_KEY,JSON.stringify(state));}catch(e){}}
+function persist(){
+  state.updatedAt = Date.now();
+  lsWrite();
+  if(docRef){
+    var snapshot = JSON.parse(JSON.stringify(state));
+    saving = saving.then(function(){return docRef.set(snapshot);}).then(function(){storeMode="cloud";setStatus();}).catch(function(){storeMode="error";setStatus();});
+  }
+}
+function normalize(s){
+  if(!s||typeof s!=="object")return null;
+  var out={profile:{weight:"",height:"",net:false},workouts:[],updatedAt:+s.updatedAt||0};
+  if(s.profile){out.profile.weight=s.profile.weight||"";out.profile.height=s.profile.height||"";out.profile.net=!!s.profile.net;}
+  if(Array.isArray(s.workouts))out.workouts=s.workouts.filter(function(w){return w&&w.id&&w.date&&w.type&&isFinite(w.met)&&isFinite(w.kg)&&isFinite(w.minutes);});
+  return out;
+}
+
+/* ---------- Render ---------- */
+var TABS=[["resumen","📊","Resumen"],["registrar","➕","Registrar"],["historial","📋","Historial"],["perfil","👤","Perfil"]];
+function renderTabs(){
+  $("tabs").innerHTML = TABS.map(function(t){return '<button data-tab="'+t[0]+'" class="'+(ui.tab===t[0]?"on":"")+'"><span>'+t[1]+'</span>'+t[2]+'</button>';}).join("");
+}
+function render(){
+  renderTabs(); setStatus();
+  var v=$("view");
+  if(ui.tab==="resumen")v.innerHTML=viewResumen();
+  else if(ui.tab==="registrar")v.innerHTML=viewRegistrar();
+  else if(ui.tab==="historial")v.innerHTML=viewHistorial();
+  else v.innerHTML=viewPerfil();
+  if(ui.tab==="registrar")updatePreview();
+}
+function needProfile(){
+  return '<div class="card"><h2>Primero tus datos</h2><div class="sub">Necesito tu peso y estatura para estimar las calorías.</div><button class="btn" data-go="perfil">Ir a Perfil</button></div>';
+}
+
+/* Resumen */
+function viewResumen(){
+  var days=ui.range, end=new Date(); end.setHours(0,0,0,0);
+  var start=new Date(end); start.setDate(start.getDate()-(days-1));
+  var sKey=dstr(start);
+  var list=state.workouts.filter(function(w){return w.date>=sKey;});
+  var totK=0,totM=0,km=0;
+  list.forEach(function(w){totK+=kcalOf(w);totM+=w.minutes;if(w.type==="walk"&&w.d&&w.d.km)km+=w.d.km;});
+  var perDay={};
+  list.forEach(function(w){var o=perDay[w.date]||(perDay[w.date]={walk:0,gym:0,football:0});o[w.type]+=kcalOf(w);});
+  var cols=[],max=0,i,d,k,o;
+  for(i=0;i<days;i++){d=new Date(start);d.setDate(start.getDate()+i);k=dstr(d);o=perDay[k]||{walk:0,gym:0,football:0};
+    var s=o.walk+o.gym+o.football; if(s>max)max=s; cols.push({k:k,o:o,s:s,d:d});}
+  var wd=["D","L","M","M","J","V","S"];
+  var chart='<div class="chart">'+cols.map(function(c){
+    var h=max?c.s/max*100:0;
+    var segs=["walk","gym","football"].map(function(t){return c.o[t]>0?'<div style="height:'+(c.o[t]/c.s*100)+'%;background:'+TYPES[t].color+'"></div>':"";}).join("");
+    return '<div class="col" title="'+esc(c.k)+': '+Math.round(c.s)+' kcal"><div class="bar" style="height:'+h+'%;min-height:'+(c.s>0?2:0)+'px">'+segs+'</div></div>';
+  }).join("")+'</div><div class="axis">'+cols.map(function(c,idx){
+    var lab = days===7 ? wd[c.d.getDay()] : (idx%5===0||idx===days-1 ? c.d.getDate() : "");
+    return '<span>'+lab+'</span>';}).join("")+'</div>';
+  var byType={walk:{n:0,k:0},gym:{n:0,k:0},football:{n:0,k:0}};
+  list.forEach(function(w){byType[w.type].n++;byType[w.type].k+=kcalOf(w);});
+  var legend='<div class="legend">'+["walk","gym","football"].map(function(t){return '<span><i class="dot" style="background:'+TYPES[t].color+'"></i>'+TYPES[t].label+': '+byType[t].n+' · '+fmt(byType[t].k)+' kcal</span>';}).join("")+'</div>';
+  var avg = days? totK/days : 0;
+  var h='<div class="seg"><button data-range="7" class="'+(days===7?"on":"")+'">Últimos 7 días</button><button data-range="30" class="'+(days===30?"on":"")+'">Últimos 30 días</button></div>';
+  if(!state.workouts.length){
+    h+='<div class="card empty">Aún no hay registros.<br>Toca <b>Registrar</b> para agregar tu primera actividad.</div>';
+    if(!profileOk())h+=needProfile();
+    return h;
+  }
+  h+='<div class="card"><div class="tiles">'
+    +'<div class="tile"><b>'+fmt(totK)+'</b><span>kcal gastadas</span></div>'
+    +'<div class="tile"><b>'+list.length+'</b><span>actividades</span></div>'
+    +'<div class="tile"><b>'+fmt(totM/60,1)+' h</b><span>de actividad</span></div>'
+    +'<div class="tile"><b>'+fmt(km,1)+' km</b><span>caminados</span></div>'
+    +'</div><div class="note">Promedio: '+fmt(avg)+' kcal/día en el período.</div></div>'
+    +'<div class="card"><h2>Calorías por día</h2>'+chart+legend+'</div>';
+  if(!profileOk())h+=needProfile();
+  return h;
+}
+
+/* Registrar */
+function viewRegistrar(){
+  if(!profileOk())return needProfile();
+  var t=ui.type;
+  var h='<div class="seg">'+Object.keys(TYPES).map(function(k){return '<button data-type="'+k+'" class="'+(t===k?"on":"")+'">'+TYPES[k].icon+' '+TYPES[k].label+'</button>';}).join("")+'</div>';
+  h+='<div class="card"><label for="f-date" style="margin-top:0">Fecha</label><input id="f-date" type="date" value="'+today()+'" max="'+today()+'">';
+  if(t==="walk"){
+    h+='<label for="f-min">Duración (minutos)</label><input id="f-min" type="number" inputmode="decimal" min="1" placeholder="Ej: 45">'
+     +'<div class="row"><div><label for="f-km">Distancia (km)</label><input id="f-km" type="number" inputmode="decimal" min="0" step="0.01" placeholder="Opcional"></div>'
+     +'<div><label for="f-steps">Pasos</label><input id="f-steps" type="number" inputmode="numeric" min="0" placeholder="Opcional"></div></div>'
+     +'<label for="f-pace">Ritmo (si no ingresas distancia ni pasos)</label><select id="f-pace">'
+     +Object.keys(WALK_PACE).map(function(k){return '<option value="'+k+'"'+(k==="normal"?" selected":"")+'>'+WALK_PACE[k].label+'</option>';}).join('')+'</select>'
+     +'<div class="note">Prioridad: distancia → pasos (con tu estatura se estima el largo de paso) → ritmo.</div>';
+  }else if(t==="gym"){
+    h+='<label for="f-min">Duración total (minutos)</label><input id="f-min" type="number" inputmode="decimal" min="1" placeholder="Ej: 60">'
+     +'<label for="f-kind">Tipo de entrenamiento</label><select id="f-kind">'+Object.keys(GYM_KINDS).map(function(k){return '<option value="'+k+'">'+GYM_KINDS[k].label+'</option>';}).join('')+'</select>'
+     +'<label for="f-int">Intensidad</label><select id="f-int"><option value="1">Ligera (conversas fácil, descansos largos)</option><option value="2" selected>Moderada</option><option value="3">Intensa (descansos cortos, sin conversar)</option></select>'
+     +'<label>Ejercicios (opcional)</label><div class="exh"><span>Ejercicio</span><span>Series</span><span>Reps</span><span>Kg</span><span></span></div><div id="exrows">'+gymRowsHtml()+'</div>'
+     +'<button class="btn ghost small" id="addex" type="button" style="margin-top:6px">＋ Agregar ejercicio</button>';
+  }else{
+    h+='<label for="f-min">Minutos jugados</label><input id="f-min" type="number" inputmode="decimal" min="1" placeholder="Ej: 60">'
+     +'<label for="f-fut">Tipo de partido</label><select id="f-fut">'+Object.keys(FUT).map(function(k){return '<option value="'+k+'"'+(k==="2"?" selected":"")+'>'+FUT[k].label+'</option>';}).join('')+'</select>'
+     +'<div class="row"><div><label for="f-goals">Goles</label><input id="f-goals" type="number" inputmode="numeric" min="0" placeholder="0"></div>'
+     +'<div><label for="f-ast">Asistencias</label><input id="f-ast" type="number" inputmode="numeric" min="0" placeholder="0"></div></div>'
+     +'<div class="note">Cuenta solo el tiempo que estuviste en la cancha.</div>';
+  }
+  h+='<label for="f-note">Nota (opcional)</label><input id="f-note" type="text" maxlength="120" placeholder="Ej: cancha sintética, con lluvia…">'
+   +'<div class="preview"><div><div class="t">Estimación</div><b id="pv-k">—</b> <span class="t">kcal</span></div><div class="t" id="pv-d" style="text-align:right"></div></div>'
+   +'<div class="warn hide" id="pv-w"></div>'
+   +'<button class="btn" id="save" disabled>Guardar actividad</button></div>';
+  return h;
+}
+function gymRowsHtml(){
+  return ui.gymRows.map(function(r,i){
+    return '<div class="ex"><input data-ex="n" data-i="'+i+'" value="'+esc(r.n)+'" placeholder="Ej: Press banca" maxlength="40">'
+     +'<input data-ex="s" data-i="'+i+'" value="'+esc(r.s)+'" type="number" inputmode="numeric" min="0" placeholder="3">'
+     +'<input data-ex="r" data-i="'+i+'" value="'+esc(r.r)+'" type="number" inputmode="numeric" min="0" placeholder="10">'
+     +'<input data-ex="k" data-i="'+i+'" value="'+esc(r.k)+'" type="number" inputmode="decimal" min="0" placeholder="40">'
+     +'<button type="button" data-rmex="'+i+'" aria-label="Quitar">✕</button></div>';
+  }).join("");
+}
+
+/* Lee el formulario y calcula; devuelve null si incompleto */
+function readForm(){
+  var p=state.profile, kg=num(p.weight), cm=num(p.height);
+  var min=num(($("f-min")||{}).value);
+  if(!(min>0)||min>1440)return {error:null};
+  var t=ui.type, met, d={}, warn="";
+  if(t==="walk"){
+    var km=num($("f-km").value), steps=num($("f-steps").value), speed;
+    if(km>0){d.src="distancia";}
+    else if(steps>0){km=steps*(0.415*cm/100)/1000;d.src="pasos";d.steps=Math.round(steps);}
+    else{speed=WALK_PACE[$("f-pace").value].v;km=speed*min/60;d.src="ritmo";}
+    speed=km/(min/60);
+    if(speed>12)warn="Velocidad de "+fmt(speed,1)+" km/h: revisa los minutos o la distancia.";
+    if(speed<1)warn="Velocidad de "+fmt(speed,1)+" km/h: revisa los minutos o la distancia.";
+    if(km>0&&steps>0&&d.src==="distancia")d.steps=Math.round(steps);
+    d.km=km;d.speed=speed;met=walkMet(speed);
+  }else if(t==="gym"){
+    var kind=$("f-kind").value,it=+$("f-int").value;
+    met=GYM_KINDS[kind].met[it];d.kind=kind;d.int=it;
+    var ex=[];ui.gymRows.forEach(function(r){var n=String(r.n||"").trim();if(!n)return;ex.push({n:n.slice(0,40),s:num(r.s)||0,r:num(r.r)||0,k:num(r.k)||0});});
+    if(ex.length)d.ex=ex;
+  }else{
+    var lv=+$("f-fut").value;met=FUT[lv].met;d.lv=lv;
+    var g=num($("f-goals").value),a=num($("f-ast").value);
+    if(g>0)d.goals=Math.round(g);if(a>0)d.ast=Math.round(a);
+  }
+  var kc=kcalCalc(met,kg,min,p.net);
+  return {t:t,min:min,met:met,kg:kg,d:d,kcal:kc,warn:warn};
+}
+function updatePreview(){
+  var r=readForm();
+  var k=$("pv-k"),dd=$("pv-d"),w=$("pv-w"),b=$("save");
+  if(!k)return;
+  if(!r||r.error===null||!r.t){k.textContent="—";dd.textContent="";w.classList.add("hide");b.disabled=true;return;}
+  k.textContent=fmt(r.kcal);
+  var txt="MET "+fmt(r.met,1)+" · "+fmt(r.kg,1)+" kg";
+  if(r.t==="walk")txt=fmt(r.d.km,2)+" km · "+fmt(r.d.speed,1)+" km/h<br>"+txt;
+  dd.innerHTML=txt;
+  if(r.warn){w.textContent=r.warn;w.classList.remove("hide");}else w.classList.add("hide");
+  b.disabled=false;
+}
+
+function saveWorkout(){
+  var r=readForm(); if(!r||!r.t)return;
+  var date=$("f-date").value||today();
+  var w={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),date:date,type:r.t,minutes:r.min,met:r.met,kg:r.kg,d:r.d,note:($("f-note").value||"").trim().slice(0,120)};
+  state.workouts.push(w);
+  if(r.t==="gym")ui.gymRows=[{n:"",s:"",r:"",k:""}];
+  persist();
+  toast("Guardado · "+fmt(kcalOf(w))+" kcal");
+  ui.tab="resumen";render();window.scrollTo(0,0);
+}
+
+/* Historial */
+function detailOf(w){
+  var d=w.d||{},parts=[];
+  parts.push(fmt(w.minutes)+" min");
+  if(w.type==="walk"){
+    if(d.km)parts.push(fmt(d.km,2)+" km"+(d.src==="ritmo"?" (est.)":""));
+    if(d.speed)parts.push(fmt(d.speed,1)+" km/h");
+    if(d.steps)parts.push(fmt(d.steps)+" pasos");
+  }else if(w.type==="gym"){
+    parts.push((GYM_KINDS[d.kind]?GYM_KINDS[d.kind].label.split(" (")[0]:"Gym")+" · "+(INTENS[d.int]||""));
+  }else{
+    parts.push(FUT[d.lv]?FUT[d.lv].label:"Partido");
+    if(d.goals)parts.push(d.goals+(d.goals===1?" gol":" goles"));
+    if(d.ast)parts.push(d.ast+(d.ast===1?" asistencia":" asistencias"));
+  }
+  return parts.join(" · ");
+}
+function viewHistorial(){
+  if(!state.workouts.length)return '<div class="card empty">Todavía no registras actividades.</div>';
+  var sorted=state.workouts.slice().sort(function(a,b){return a.date<b.date?1:a.date>b.date?-1:(a.id<b.id?1:-1);});
+  var h="",cur="",dayK=0,buf="";
+  function flush(){if(!cur)return;h+='<div class="day"><span>'+esc(parseD(cur).toLocaleDateString("es-CL",{weekday:"long",day:"numeric",month:"long"}))+'</span><span>'+fmt(dayK)+' kcal</span></div>'+buf;}
+  sorted.forEach(function(w){
+    if(w.date!==cur){flush();cur=w.date;dayK=0;buf="";}
+    var kc=kcalOf(w);dayK+=kc;
+    var T=TYPES[w.type]||TYPES.gym;
+    var ex="";
+    if(w.d&&w.d.ex){ex='<div class="dd">'+w.d.ex.map(function(e){
+      var s=esc(e.n);if(e.s&&e.r)s+=" "+e.s+"×"+e.r;if(e.k)s+=" @ "+fmt(e.k,1)+" kg";return s;}).join(" · ")+'</div>';
+      var vol=w.d.ex.reduce(function(a,e){return a+e.s*e.r*e.k;},0);
+      if(vol>0)ex+='<div class="dd">Volumen total: '+fmt(vol)+' kg</div>';}
+    var sure=ui.confirmDel===w.id;
+    buf+='<div class="item"><div class="ico" style="background:color-mix(in srgb,'+T.color+' 18%,transparent)">'+T.icon+'</div>'
+      +'<div class="main"><div class="tt">'+T.label+'</div><div class="dd">'+esc(detailOf(w))+'</div>'+ex
+      +(w.note?'<div class="dd">“'+esc(w.note)+'”</div>':"")
+      +'<button class="del'+(sure?" sure":"")+'" data-del="'+esc(w.id)+'">'+(sure?"Toca otra vez para borrar":"Eliminar")+'</button></div>'
+      +'<div class="kc"><b>'+fmt(kc)+'</b><small>kcal</small></div></div>';
+  });
+  flush();
+  return h;
+}
+
+/* Perfil */
+function viewPerfil(){
+  var p=state.profile;
+  var bmi="";
+  if(profileOk()){var m=num(p.height)/100,b=num(p.weight)/(m*m);bmi='<div class="note">IMC: '+fmt(b,1)+' · Largo de paso estimado: '+fmt(0.415*m*100,0)+' cm</div>';}
+  return '<div class="card"><h2>Tus datos</h2>'
+   +'<div class="row"><div><label for="p-w" style="margin-top:0">Peso (kg)</label><input id="p-w" type="number" inputmode="decimal" min="25" max="300" step="0.1" value="'+esc(p.weight)+'" placeholder="Ej: 75"></div>'
+   +'<div><label for="p-h" style="margin-top:0">Estatura (cm)</label><input id="p-h" type="number" inputmode="numeric" min="100" max="250" value="'+esc(p.height)+'" placeholder="Ej: 175"></div></div>'+bmi
+   +'<label class="chk"><input type="checkbox" id="p-net"'+(p.net?" checked":"")+'><span><b>Mostrar calorías netas</b><br><span class="sub">Descuenta lo que quemarías en reposo en ese mismo tiempo. Es lo que realmente “extra” gastas por la actividad. Afecta todo el historial.</span></span></label></div>'
+   +'<div class="card"><h2>Cómo se calcula</h2><div class="sub">Calorías = MET × peso (kg) × horas. El MET depende de la actividad:<br>• Caminata: según tu velocidad real (fórmula ACSM).<br>• Gym y fútbol: valores del Compendio de Actividades Físicas según tipo e intensidad.<br>• Tu estatura se usa para convertir pasos en distancia.<br><br>Es una estimación con margen de error de ±20–30 %: no considera edad, sexo, composición corporal, pendiente ni pulsaciones. Úsala para comparar semana a semana, no como cifra exacta.</div></div>'
+   +'<div class="card"><h2>Respaldo</h2><div class="sub">Tus datos viven solo en este dispositivo. Descarga un respaldo de vez en cuando; si cambias de celular o borras los datos del navegador, lo restauras aquí.</div>'
+   +'<button class="btn" id="bk" style="margin-top:12px">Descargar respaldo (JSON)</button>'
+   +'<label class="btn ghost" for="rs" style="display:block;text-align:center;cursor:pointer">Restaurar respaldo</label><input id="rs" type="file" accept="application/json,.json" class="hide">'
+   +'<button class="btn ghost" id="csv">Copiar historial (CSV)</button></div>';
+}
+function csv(){
+  var rows=[["fecha","tipo","minutos","kcal","met","peso_kg","detalle","nota"]];
+  state.workouts.slice().sort(function(a,b){return a.date<b.date?-1:1;}).forEach(function(w){
+    rows.push([w.date,TYPES[w.type].label,w.minutes,Math.round(kcalOf(w)),w.met.toFixed(2),w.kg,detailOf(w),w.note||""]);});
+  return rows.map(function(r){return r.map(function(c){return '"'+String(c).replace(/"/g,'""')+'"';}).join(",");}).join("\n");
+}
+
+/* ---------- Eventos ---------- */
+document.addEventListener("click",function(e){
+  var t=e.target.closest("button");if(!t)return;
+  if(t.dataset.tab){ui.tab=t.dataset.tab;ui.confirmDel=null;render();window.scrollTo(0,0);return;}
+  if(t.dataset.go){ui.tab=t.dataset.go;render();return;}
+  if(t.dataset.range){ui.range=+t.dataset.range;render();return;}
+  if(t.dataset.type){ui.type=t.dataset.type;render();return;}
+  if(t.id==="save"){saveWorkout();return;}
+  if(t.id==="addex"){ui.gymRows.push({n:"",s:"",r:"",k:""});$("exrows").innerHTML=gymRowsHtml();return;}
+  if(t.dataset.rmex!==undefined){ui.gymRows.splice(+t.dataset.rmex,1);if(!ui.gymRows.length)ui.gymRows=[{n:"",s:"",r:"",k:""}];$("exrows").innerHTML=gymRowsHtml();return;}
+  if(t.dataset.del){
+    if(ui.confirmDel===t.dataset.del){state.workouts=state.workouts.filter(function(w){return w.id!==t.dataset.del;});ui.confirmDel=null;persist();toast("Eliminado");}
+    else ui.confirmDel=t.dataset.del;
+    render();return;
+  }
+  if(t.id==="bk"){
+    try{
+      var blob=new Blob([JSON.stringify(state,null,1)],{type:"application/json"});
+      var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="registro-deportes-"+today()+".json";
+      document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(a.href);},2000);
+      toast("Respaldo descargado");
+    }catch(err){toast("No se pudo descargar");}
+    return;
+  }
+  if(t.id==="csv"){
+    var txt=csv();
+    var ok=function(){toast("CSV copiado");};
+    try{navigator.clipboard.writeText(txt).then(ok,function(){toast("No se pudo copiar");});}catch(err){toast("No se pudo copiar");}
+  }
+});
+document.addEventListener("input",function(e){
+  var el=e.target;
+  if(el.dataset&&el.dataset.ex!==undefined){ui.gymRows[+el.dataset.i][el.dataset.ex]=el.value;updatePreview();return;}
+  if(el.id==="p-w"||el.id==="p-h"){
+    state.profile.weight=$("p-w").value;state.profile.height=$("p-h").value;persist();return;
+  }
+  if(ui.tab==="registrar")updatePreview();
+});
+document.addEventListener("change",function(e){
+  var el=e.target;
+  if(el.id==="rs"&&el.files&&el.files[0]){
+    var fr=new FileReader();
+    fr.onload=function(){
+      try{
+        var n=normalize(JSON.parse(fr.result));
+        if(!n||!n.workouts)throw new Error("x");
+        state=n;persist();render();toast("Respaldo restaurado ("+n.workouts.length+" actividades)");
+      }catch(err){toast("Archivo no válido");}
+    };
+    fr.readAsText(el.files[0]);return;
+  }
+  if(el.id==="p-net"){state.profile.net=el.checked;persist();return;}
+  if(ui.tab==="registrar")updatePreview();
+});
+
+/* ---------- Inicio ---------- */
+var local=normalize(lsRead());
+if(local)state=local;
+if(!profileOk()&&!state.workouts.length)ui.tab="perfil";
+render();
+if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){});});}
+window.__app={state:function(){return state;},kcalCalc:kcalCalc,walkMet:walkMet};
+})();
+</script>
+</body>
+</html>
