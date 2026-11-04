@@ -58,6 +58,16 @@ input[type=date]::-webkit-datetime-edit{padding:0}
 .srow .sn{font-size:13px;color:var(--mute);text-align:center}
 .srow input{padding:9px 8px;font-size:15px}
 .srow button{border:0;background:none;color:var(--mute);font-size:22px;cursor:pointer;line-height:1}
+.ddwrap{position:relative;margin:8px 0}
+.ddbtn{width:100%;display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:12px 14px;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;font-family:inherit}
+.ddbtn .di,.ddlist .di{display:inline-block;width:28px;font-size:20px}
+.ddbtn .car{color:var(--mute)}
+.ddlist{position:absolute;left:0;right:0;top:calc(100% + 6px);background:var(--card);border:1px solid var(--line);border-radius:12px;max-height:55vh;overflow:auto;z-index:6;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.ddlist button{display:flex;align-items:center;width:100%;padding:11px 14px;border:0;background:none;color:var(--ink);font-size:16px;text-align:left;cursor:pointer;font-family:inherit;border-bottom:1px solid var(--line)}
+.ddlist button:last-child{border-bottom:0}
+.ddlist button.on{background:var(--field);font-weight:600;color:var(--accent)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{border:1px solid var(--line);background:var(--field);color:var(--ink);padding:6px 11px;border-radius:16px;font-size:13px;cursor:pointer;font-family:inherit}
 input:focus,select:focus{outline:2px solid var(--accent);outline-offset:0}
 .row{display:flex;gap:10px}.row>*{flex:1;min-width:0}
 .btn{width:100%;border:0;background:var(--accent);color:var(--accent-ink);padding:13px;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;margin-top:14px;font-family:inherit}
@@ -122,7 +132,7 @@ svg text{fill:var(--mute);font-size:10px;font-family:inherit}
 <body>
 <div class="wrap">
   <h1>Registro de Deportes</h1>
-  <div class="sub" id="status">Guardado en este dispositivo · v7</div>
+  <div class="sub" id="status">Guardado en este dispositivo · v8</div>
   <div id="view"></div>
 </div>
 <nav class="tabs"><div id="tabs"></div></nav>
@@ -153,6 +163,50 @@ var GYM_KINDS = {
 };
 var INTENS = {1:"Ligera",2:"Moderada",3:"Intensa"};
 var FUT = {1:{label:"Recreativo (pichanga)",met:7},2:{label:"Intermedio (fútbol 7 / baby)",met:8.5},3:{label:"Competitivo (11 vs 11)",met:10}};
+var GENERIC = {
+  padel:{label:"Pádel",icon:"🏓",hue:50,levels:{1:{label:"Recreativo",met:5},2:{label:"Intermedio",met:6},3:{label:"Competitivo",met:7.5}}},
+  tenis:{label:"Tenis",icon:"🎾",hue:75,levels:{1:{label:"Dobles recreativo",met:6},2:{label:"Singles",met:7.3},3:{label:"Competitivo",met:8}}},
+  basquetbol:{label:"Básquetbol",icon:"🏀",hue:20,levels:{1:{label:"Tiros / recreativo",met:4.5},2:{label:"Partido amistoso",met:6.5},3:{label:"Competitivo",met:8}}},
+  voleibol:{label:"Vóleibol",icon:"🏐",hue:195,levels:{1:{label:"Recreativo",met:3},2:{label:"Intermedio",met:4},3:{label:"Competitivo / playa",met:6}}},
+  rugby:{label:"Rugby",icon:"🏉",hue:5,levels:{1:{label:"Touch / recreativo",met:6.3},2:{label:"Entrenamiento",met:7.5},3:{label:"Partido competitivo",met:8.3}}},
+  senderismo:{label:"Senderismo",icon:"🥾",hue:130,dist:true,levels:{1:{label:"Suave (terreno plano)",met:4.5},2:{label:"Moderado",met:6},3:{label:"Exigente (cuesta / mochila)",met:7.8}}},
+  yoga:{label:"Yoga",icon:"🧘",hue:285,levels:{1:{label:"Suave",met:2},2:{label:"Moderado (hatha)",met:2.5},3:{label:"Intenso (vinyasa / power)",met:4}}},
+  pilates:{label:"Pilates",icon:"🤸",hue:310,levels:{1:{label:"Suave",met:2.8},2:{label:"Moderado",met:3},3:{label:"Intenso",met:4}}},
+  baile:{label:"Baile / Zumba",icon:"💃",hue:340,levels:{1:{label:"Suave",met:3.5},2:{label:"Moderado",met:5},3:{label:"Intenso (zumba / aeróbico)",met:7}}},
+  boxeo:{label:"Boxeo",icon:"🥊",hue:355,levels:{1:{label:"Saco / técnica",met:5.5},2:{label:"Guantes / sparring",met:7.8},3:{label:"Combate",met:12}}},
+  marciales:{label:"Artes marciales",icon:"🥋",hue:240,levels:{1:{label:"Técnica / kata",met:5.3},2:{label:"Entrenamiento",met:8},3:{label:"Combate / sparring",met:10.3}}},
+  escalada:{label:"Escalada",icon:"🧗",hue:30,levels:{1:{label:"Suave",met:5},2:{label:"Moderada (pared indoor)",met:5.8},3:{label:"Intensa (roca / boulder)",met:8}}},
+  patinaje:{label:"Patinaje",icon:"⛸️",hue:175,dist:true,levels:{1:{label:"Recreativo",met:5.5},2:{label:"Moderado",met:7},3:{label:"Rápido",met:9.8}}},
+  remo:{label:"Remo",icon:"🚣",hue:215,levels:{1:{label:"Suave",met:4.8},2:{label:"Moderado",met:7},3:{label:"Intenso",met:8.5}}},
+  spinning:{label:"Spinning",icon:"🚲",hue:265,levels:{1:{label:"Suave",met:4.8},2:{label:"Moderado",met:6.8},3:{label:"Intenso",met:8.8}}},
+  other:{label:"Otro deporte",icon:"🎯",hue:0,levels:{1:{label:"Suave",met:3},2:{label:"Moderado",met:5},3:{label:"Intenso",met:8}}}
+};
+Object.keys(GENERIC).forEach(function(k){var g=GENERIC[k];TYPES[k]={label:g.label,icon:g.icon,color:k==="other"?"hsl(0 0% 58%)":"hsl("+g.hue+" 62% 54%)"};});
+TYPE_KEYS=TYPE_KEYS.concat(Object.keys(GENERIC));
+var NOTES = {
+  walk:["Con el perro","Por el cerro","Después del almuerzo","En cinta","Con lluvia o viento","Camino al trabajo"],
+  run:["Trote suave de recuperación","Series de 400 m","Tempo run","Fondo largo","Cuestas","Con lluvia"],
+  bike:["Ruta por ciclovía","Subida al cerro","Con viento en contra","Salida con amigos","Camino al trabajo"],
+  swim:["Piscina temperada","Aguas abiertas","Técnica con tabla","Series de 100 m","Crol / pecho / espalda"],
+  gym:["Día de pecho y tríceps","Día de pierna","Día de espalda y bíceps","Subí peso en sentadilla","Poco descanso entre series","Sesión corta"],
+  football:["Cancha sintética","Cancha de pasto","Baby fútbol","Campeonato / liga","Jugué de arquero","Con lluvia","Partido con la oficina"],
+  padel:["Dobles con amigos","Cancha cubierta","Partido de torneo","Clase con profe","Entrenamiento de saque y volea"],
+  tenis:["Singles","Dobles","Cancha de arcilla","Cancha dura","Clase con profe","Peloteo"],
+  basquetbol:["Tiros libres","3 vs 3","Partido completo","Cancha techada","Liga de barrio"],
+  voleibol:["Vóley playa","Partido en gimnasio","Entrenamiento de saque","Liga recreativa"],
+  rugby:["Entrenamiento de equipo","Partido de liga","Touch rugby","Práctica de scrum y tackle"],
+  senderismo:["Sendero con desnivel","Con mochila cargada","Cerro / cumbre","Trekking de un día","Camino plano por el parque"],
+  yoga:["Hatha suave","Vinyasa","Clase online","Estiramientos y respiración","Yoga restaurativo"],
+  pilates:["Mat pilates","Con reformer","Clase grupal","Core y movilidad"],
+  baile:["Clase de zumba","Salsa / bachata","Coreografía nueva","Baile libre"],
+  boxeo:["Saco pesado","Guantes con compañero","Sombra y técnica","Cardio boxing"],
+  marciales:["Judo","Karate","Taekwondo","Jiu-jitsu","Sparring","Kata / técnica"],
+  escalada:["Boulder","Pared indoor","Vía con cuerda","Roca al aire libre"],
+  patinaje:["Patines en línea","Hielo","Skatepark","Paseo por la costanera"],
+  remo:["Remo en máquina","Series de 500 m","Remo en agua","Ritmo constante"],
+  spinning:["Clase de spinning","Intervalos","Sesión de resistencia","Con música"],
+  other:["Entrenamiento recreativo","Competencia","Con amigos","Clase con instructor"]
+};
 var LS_KEY = "registro-deportes-v1";
 
 var MUSCLES = {
@@ -369,7 +423,8 @@ function viewRegistrar(){
   if(ui.editId){
     h+='<div class="banner"><span>Editando: <b>'+TYPES[t].label+'</b></span><button class="btn ghost small" data-canceledit="1">Cancelar</button></div>';
   }else{
-    h+='<div class="seg wrapseg">'+TYPE_KEYS.map(function(k){return '<button data-type="'+k+'" class="'+(t===k?"on":"")+'">'+TYPES[k].icon+' '+TYPES[k].label+'</button>';}).join("")+'</div>';
+    h+='<div class="ddwrap"><button class="ddbtn" type="button" data-ddtoggle="1"><span><span class="di">'+TYPES[t].icon+'</span>'+esc(TYPES[t].label)+'</span><span class="car">▾</span></button>'
+      +'<div class="ddlist hide" id="ddlist">'+TYPE_KEYS.map(function(k){return '<button type="button" data-type="'+k+'" class="'+(t===k?"on":"")+'"><span class="di">'+TYPES[k].icon+'</span>'+esc(TYPES[k].label)+'</button>';}).join("")+'</div></div>';
   }
   h+='<div class="card"><label for="f-date" style="margin-top:0">Fecha</label><div class="dw"><input id="f-date" type="date" value="'+today()+'" max="'+today()+'"></div>';
   if(t==="walk"){
@@ -398,6 +453,13 @@ function viewRegistrar(){
      +'<label>Ejercicios (opcional)</label><div id="exrows">'+gymRowsHtml()+'</div>'
      +'<button class="btn ghost small" id="addex" type="button" style="margin-top:6px">＋ Agregar ejercicio</button>'
      +'<div class="note">En <b>Pesas / fuerza</b>, si ingresas reps y kg por serie, la intensidad se calcula con el volumen que levantas (reps × kg) por minuto y reemplaza la intensidad elegida. Si no anotas todos los ejercicios de la sesión, el volumen queda subestimado y las calorías también.</div>';
+  }else if(GENERIC[t]){
+    var G=GENERIC[t];
+    h+='<label for="f-min">Duración (minutos)</label>'+tin("f-min","Ej: 60")
+     +(t==="other"?'<label for="f-gname">Nombre del deporte</label><input id="f-gname" type="text" maxlength="30" placeholder="Ej: Hockey, Surf, Golf…">':'')
+     +'<label for="f-glv">Intensidad</label><select id="f-glv">'+opts(G.levels,"2")+'</select>'
+     +(G.dist?'<label for="f-gkm">Distancia (km, opcional)</label>'+tin("f-gkm","Ej: 6,5"):'')
+     +'<div class="note">Estimación por tipo e intensidad (valores MET del Compendio de Actividades Físicas, aproximados para algunos deportes).</div>';
   }else{
     h+='<label for="f-min">Minutos jugados</label>'+tin("f-min","Ej: 60")
      +'<label for="f-fut">Tipo de partido</label><select id="f-fut">'+opts(FUT,"2")+'</select>'
@@ -405,7 +467,9 @@ function viewRegistrar(){
      +'<div><label for="f-ast">Asistencias</label>'+tin("f-ast","0","numeric")+'</div></div>'
      +'<div class="note">Cuenta solo el tiempo que estuviste en la cancha.</div>';
   }
-  h+='<label for="f-note">Nota (opcional)</label><input id="f-note" type="text" maxlength="120" placeholder="Ej: cancha sintética, con lluvia…">'
+  var nt=NOTES[t]||[];
+  h+='<label for="f-note">Nota (opcional)</label><input id="f-note" type="text" maxlength="120" placeholder="Ej: '+esc(nt[0]||"")+'">'
+   +'<div class="chips">'+nt.map(function(x){return '<button type="button" class="chip" data-chip="'+esc(x)+'">'+esc(x)+'</button>';}).join("")+'</div>'
    +'<div class="preview"><div><div class="t">Estimación</div><b id="pv-k">—</b> <span class="t">kcal</span></div><div class="t" id="pv-d" style="text-align:right"></div></div>'
    +'<div class="warn hide" id="pv-w"></div>'
    +'<button class="btn" id="save" disabled>'+(ui.editId?"Guardar cambios":"Guardar actividad")+'</button></div>';
@@ -484,6 +548,11 @@ function readForm(){
       }
       if(idx>5)warn="Volumen muy alto para "+fmt(min)+" min: revisa los kg, las repeticiones o la duración.";
     }
+  }else if(GENERIC[t]){
+    var G=GENERIC[t],gl=$("f-glv").value;
+    met=G.levels[gl].met;d.glv=+gl;inp.glv=gl;
+    if(t==="other"){var gn=($("f-gname").value||"").trim().slice(0,30);d.name=gn;inp.name=gn;}
+    if(G.dist){inp.km=$("f-gkm").value;var gk=num(inp.km);if(gk>0)d.km=gk;}
   }else{
     var lv=+$("f-fut").value;met=FUT[lv].met;d.lv=lv;
     inp.goals=$("f-goals").value;inp.ast=$("f-ast").value;
@@ -515,6 +584,7 @@ function prefill(w){
   else if(w.type==="bike"){set("f-km",i.km);set("f-bint",i.bint);}
   else if(w.type==="swim"){set("f-m",i.m);set("f-sint",i.sint);}
   else if(w.type==="gym"){set("f-kind",d.kind);set("f-int",d.int);}
+  else if(GENERIC[w.type]){set("f-glv",d.glv);set("f-gname",i.name);set("f-gkm",i.km);}
   else{set("f-fut",d.lv);set("f-goals",i.goals);set("f-ast",i.ast);}
   updatePreview();
 }
@@ -555,6 +625,7 @@ function detailOf(w){
   if(w.type==="bike"&&d.src==="ritmo"&&d.in&&BIKE_INT[d.in.bint])parts.push(BIKE_INT[d.in.bint].label.split(" (")[0]);
   if(w.type==="swim"){if(d.m)parts.push(fmt(d.m)+" m");if(d.in&&SWIM_INT[d.in.sint])parts.push(SWIM_INT[d.in.sint].label.split(" (")[0]);}
   if(w.type==="gym")parts.push((GYM_KINDS[d.kind]?GYM_KINDS[d.kind].label.split(" (")[0]:"Gym")+" · "+(d.src==="volumen"?"intensidad según carga":(INTENS[d.int]||"")));
+  if(GENERIC[w.type]){var gl=GENERIC[w.type].levels[d.glv];if(gl)parts.push(gl.label.split(" (")[0]);}
   if(w.type==="football"){parts.push(FUT[d.lv]?FUT[d.lv].label:"Partido");if(d.goals)parts.push(d.goals+(d.goals===1?" gol":" goles"));if(d.ast)parts.push(d.ast+(d.ast===1?" asistencia":" asistencias"));}
   return parts.join(" · ");
 }
@@ -576,7 +647,7 @@ function viewHistorial(){
       if(vol>0)ex+='<div class="dd">Volumen levantado: '+fmt(vol)+' kg'+(w.d.src==="volumen"?" · intensidad según carga":"")+'</div>';}
     var sure=ui.confirmDel===w.id;
     buf+='<div class="item"><div class="ico" style="background:color-mix(in srgb,'+T.color+' 18%,transparent)">'+T.icon+'</div>'
-      +'<div class="main"><div class="tt">'+T.label+'</div><div class="dd">'+esc(detailOf(w))+'</div>'+ex
+      +'<div class="main"><div class="tt">'+(w.type==="other"&&w.d&&w.d.name?esc(w.d.name):T.label)+'</div><div class="dd">'+esc(detailOf(w))+'</div>'+ex
       +(w.note?'<div class="dd">“'+esc(w.note)+'”</div>':"")
       +'<div class="acts"><button class="lk" data-edit="'+esc(w.id)+'">Editar</button><button class="lk'+(sure?" sure":"")+'" data-del="'+esc(w.id)+'">'+(sure?"Toca otra vez para borrar":"Eliminar")+'</button></div></div>'
       +'<div class="kc"><b>'+fmt(kc)+'</b><small>kcal</small></div></div>';
@@ -652,7 +723,7 @@ function viewPerfil(){
    +'<button class="btn" id="bk" style="margin-top:12px">Descargar respaldo (JSON)</button>'
    +'<label class="btn ghost" for="rs" style="display:block;text-align:center;cursor:pointer">Restaurar respaldo</label><input id="rs" type="file" accept="application/json,.json" class="hide">'
    +'<button class="btn ghost" id="csv">Copiar historial (CSV)</button></div>'
-   +'<div class="card"><h2>Versión v7</h2><div class="sub">Si publiqué cambios y no los ves, toca el botón. No borra tus datos.</div><button class="btn ghost" id="upd">Buscar actualización</button></div>';
+   +'<div class="card"><h2>Versión v8</h2><div class="sub">Si publiqué cambios y no los ves, toca el botón. No borra tus datos.</div><button class="btn ghost" id="upd">Buscar actualización</button></div>';
 }
 function csv(){
   var rows=[["fecha","tipo","minutos","kcal","met","detalle","nota"]];
@@ -663,9 +734,12 @@ function csv(){
 
 /* ---------- Eventos ---------- */
 document.addEventListener("click",function(e){
+  var dl0=$("ddlist");if(dl0&&!dl0.classList.contains("hide")&&!e.target.closest(".ddwrap"))dl0.classList.add("hide");
   var t=e.target.closest("button");if(!t)return;
   if(t.dataset.tab){ui.tab=t.dataset.tab;ui.confirmDel=null;ui.editId=null;ui.gymRows=[blankRow()];render();window.scrollTo(0,0);return;}
   if(t.dataset.range){ui.range=+t.dataset.range;render();return;}
+  if(t.dataset.ddtoggle){var dl=$("ddlist");if(dl)dl.classList.toggle("hide");return;}
+  if(t.dataset.chip){var nf=$("f-note");if(nf){var cur=nf.value.trim();if(cur.indexOf(t.dataset.chip)<0){nf.value=(cur?cur+", ":"")+t.dataset.chip;nf.value=nf.value.slice(0,120);}}return;}
   if(t.dataset.type){ui.type=t.dataset.type;render();return;}
   if(t.dataset.canceledit){ui.editId=null;ui.gymRows=[blankRow()];ui.tab="historial";render();return;}
   if(t.dataset.edit){startEdit(t.dataset.edit);return;}
