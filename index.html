@@ -53,6 +53,11 @@ input[type=date]::-webkit-datetime-edit{padding:0}
 .exr-nums{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px}
 .exr-nums small{display:block;font-size:11px;color:var(--mute);margin-bottom:3px}
 .exr-nums input{padding:9px 8px;font-size:15px}
+.shead{display:grid;grid-template-columns:24px 1fr 1fr 34px;gap:8px;font-size:11px;color:var(--mute);margin-top:10px}
+.srow{display:grid;grid-template-columns:24px 1fr 1fr 34px;gap:8px;align-items:center;margin-top:5px}
+.srow .sn{font-size:13px;color:var(--mute);text-align:center}
+.srow input{padding:9px 8px;font-size:15px}
+.srow button{border:0;background:none;color:var(--mute);font-size:22px;cursor:pointer;line-height:1}
 input:focus,select:focus{outline:2px solid var(--accent);outline-offset:0}
 .row{display:flex;gap:10px}.row>*{flex:1;min-width:0}
 .btn{width:100%;border:0;background:var(--accent);color:var(--accent-ink);padding:13px;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;margin-top:14px;font-family:inherit}
@@ -117,7 +122,7 @@ svg text{fill:var(--mute);font-size:10px;font-family:inherit}
 <body>
 <div class="wrap">
   <h1>Registro de Deportes</h1>
-  <div class="sub" id="status">Guardado en este dispositivo · v6</div>
+  <div class="sub" id="status">Guardado en este dispositivo · v7</div>
   <div id="view"></div>
 </div>
 <nav class="tabs"><div id="tabs"></div></nav>
@@ -169,7 +174,23 @@ var MUSCLES = {
 var state = {profile:{height:"",net:false,age:"",sex:""},weights:[],goals:{kcal:"",sessions:""},workouts:[],updatedAt:0};
 var ui = {tab:"resumen",range:7,type:"walk",gymRows:[blankRow()],confirmDel:null,editId:null};
 
-function blankRow(){return {m:"",e:"",n:"",s:"",r:"",k:""};}
+function blankSet(){return {r:"",k:""};}
+function blankRow(){return {m:"",e:"",n:"",sets:[blankSet()]};}
+var BW={"Dominadas":1,"Flexiones":0.65,"Fondos en paralelas (pecho)":1,"Fondos en paralelas (tríceps)":1,"Fondos en banco":0.6}; // fracción del peso corporal que se levanta
+function setsOf(e){
+  if(e.sets)return e.sets;
+  if(!(e.r>0))return [];
+  var n=Math.max(1,Math.round(e.s||1)),a=[],i;
+  for(i=0;i<n;i++)a.push({r:e.r,k:e.k||0,rr:e.rr!=null?e.rr:String(e.r),rk:e.rk!=null?e.rk:String(e.k||"")});
+  return a;
+}
+function fk(k){return fmt(k,k%1?1:0);}
+function setsText(sets){
+  if(!sets.length)return "";
+  var same=sets.every(function(x){return x.r===sets[0].r&&x.k===sets[0].k;});
+  if(same)return sets.length+"×"+sets[0].r+(sets[0].k>0?" @ "+fk(sets[0].k)+" kg":"");
+  return sets.map(function(x){return x.r+"×"+(x.k>0?fk(x.k):"0");}).join(" · ")+" (reps×kg)";
+}
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
 function $(id){return document.getElementById(id);}
 function num(v){var n=parseFloat(String(v==null?"":v).trim().replace(",","."));return isFinite(n)?n:NaN;}
@@ -373,9 +394,10 @@ function viewRegistrar(){
   }else if(t==="gym"){
     h+='<label for="f-min">Duración total (minutos)</label>'+tin("f-min","Ej: 60")
      +'<label for="f-kind">Tipo de entrenamiento</label><select id="f-kind">'+opts(GYM_KINDS,"pesas")+'</select>'
-     +'<label for="f-int">Intensidad</label><select id="f-int"><option value="1">Ligera (conversas fácil, descansos largos)</option><option value="2" selected>Moderada</option><option value="3">Intensa (descansos cortos, sin conversar)</option></select>'
+     +'<label for="f-int">Intensidad (en Pesas se reemplaza si ingresas kg)</label><select id="f-int"><option value="1">Ligera (conversas fácil, descansos largos)</option><option value="2" selected>Moderada</option><option value="3">Intensa (descansos cortos, sin conversar)</option></select>'
      +'<label>Ejercicios (opcional)</label><div id="exrows">'+gymRowsHtml()+'</div>'
-     +'<button class="btn ghost small" id="addex" type="button" style="margin-top:6px">＋ Agregar ejercicio</button>';
+     +'<button class="btn ghost small" id="addex" type="button" style="margin-top:6px">＋ Agregar ejercicio</button>'
+     +'<div class="note">En <b>Pesas / fuerza</b>, si ingresas reps y kg por serie, la intensidad se calcula con el volumen que levantas (reps × kg) por minuto y reemplaza la intensidad elegida. Si no anotas todos los ejercicios de la sesión, el volumen queda subestimado y las calorías también.</div>';
   }else{
     h+='<label for="f-min">Minutos jugados</label>'+tin("f-min","Ej: 60")
      +'<label for="f-fut">Tipo de partido</label><select id="f-fut">'+opts(FUT,"2")+'</select>'
@@ -392,14 +414,22 @@ function viewRegistrar(){
 function gymRowsHtml(){
   return ui.gymRows.map(function(r,i){
     var list=r.m&&MUSCLES[r.m]?MUSCLES[r.m]:[];
+    var bw=BW[r.n]>0;
     var mo='<option value="">Músculo…</option>'+Object.keys(MUSCLES).map(function(k){return '<option value="'+esc(k)+'"'+(r.m===k?" selected":"")+'>'+esc(k)+'</option>';}).join("");
     var eo='<option value="">'+(r.m?"Ejercicio…":"Elige un músculo primero")+'</option>'+list.map(function(x){return '<option value="'+esc(x)+'"'+(r.e===x?" selected":"")+'>'+esc(x)+'</option>';}).join("")+'<option value="__otro"'+(r.e==="__otro"?" selected":"")+'>Otro (escribir)…</option>';
+    var sets=r.sets.map(function(st,j){
+      return '<div class="srow"><span class="sn">'+(j+1)+'</span>'
+       +'<input data-set="r" data-i="'+i+'" data-j="'+j+'" data-dec="1" value="'+esc(st.r)+'" type="text" inputmode="numeric" placeholder="10">'
+       +'<input data-set="k" data-i="'+i+'" data-j="'+j+'" data-dec="1" value="'+esc(st.k)+'" type="text" inputmode="decimal" placeholder="'+(bw?"0":"40")+'">'
+       +(r.sets.length>1?'<button type="button" data-rmset="'+i+':'+j+'" aria-label="Quitar serie">−</button>':'<span></span>')+'</div>';
+    }).join("");
     return '<div class="exr"><div class="exr-top"><select data-ex="m" data-i="'+i+'">'+mo+'</select><button type="button" data-rmex="'+i+'" aria-label="Quitar ejercicio">✕</button></div>'
       +'<select data-ex="e" data-i="'+i+'" style="margin-top:6px">'+eo+'</select>'
       +(r.e==="__otro"?'<input data-ex="n" data-i="'+i+'" value="'+esc(r.n)+'" placeholder="Nombre del ejercicio" maxlength="40" style="margin-top:6px">':"")
-      +'<div class="exr-nums"><div><small>Series</small><input data-ex="s" data-i="'+i+'" data-dec="1" value="'+esc(r.s)+'" type="text" inputmode="numeric" placeholder="3"></div>'
-      +'<div><small>Reps</small><input data-ex="r" data-i="'+i+'" data-dec="1" value="'+esc(r.r)+'" type="text" inputmode="numeric" placeholder="10"></div>'
-      +'<div><small>Kg</small><input data-ex="k" data-i="'+i+'" data-dec="1" value="'+esc(r.k)+'" type="text" inputmode="decimal" placeholder="40"></div></div></div>';
+      +'<div class="shead"><span></span><span>Reps</span><span>'+(bw?"Kg extra":"Kg")+'</span><span></span></div>'+sets
+      +'<button type="button" class="btn ghost small" data-addset="'+i+'" style="margin-top:6px">＋ Serie</button>'
+      +(bw?'<div class="note">Cuenta tu peso corporal; en Kg anota solo el lastre extra (0 si no usas).</div>':"")
+      +'</div>';
   }).join("");
 }
 function readForm(){
@@ -432,8 +462,28 @@ function readForm(){
   }else if(t==="gym"){
     var kind=$("f-kind").value,it=+$("f-int").value;
     met=GYM_KINDS[kind].met[it];d.kind=kind;d.int=it;
-    var ex=[];ui.gymRows.forEach(function(r){var n=String(r.n||"").trim();if(!n)return;ex.push({m:r.m||"",n:n.slice(0,40),s:num(r.s)||0,r:num(r.r)||0,k:num(r.k)||0,rs:String(r.s||""),rr:String(r.r||""),rk:String(r.k||"")});});
+    var ex=[],vol=0,nsets=0;
+    ui.gymRows.forEach(function(row){
+      var n=String(row.n||"").trim();if(!n)return;
+      var bwf=(BW[n]||0)*kg,sets=[];
+      row.sets.forEach(function(st){
+        var rr=num(st.r),kk=num(st.k);if(!(rr>0))return;
+        kk=(isFinite(kk)&&kk>0)?kk:0;
+        sets.push({r:rr,k:kk,rr:String(st.r),rk:String(st.k||"")});
+        vol+=rr*(kk+bwf);nsets++;
+      });
+      ex.push({m:row.m||"",n:n.slice(0,40),sets:sets});
+    });
     if(ex.length)d.ex=ex;
+    if(vol>0){
+      d.vol=Math.round(vol);d.nsets=nsets;
+      var idx=(vol/min)/kg; d.idx=idx;
+      if(kind==="pesas"){
+        met=3.5+2.5*Math.max(0,Math.min(1,(idx-0.5)/2));
+        d.src="volumen";
+      }
+      if(idx>5)warn="Volumen muy alto para "+fmt(min)+" min: revisa los kg, las repeticiones o la duración.";
+    }
   }else{
     var lv=+$("f-fut").value;met=FUT[lv].met;d.lv=lv;
     inp.goals=$("f-goals").value;inp.ast=$("f-ast").value;
@@ -450,6 +500,7 @@ function updatePreview(){
   if(!r){k.textContent="—";dd.textContent="";w.classList.add("hide");b.disabled=true;return;}
   k.textContent=fmt(r.kcal);
   var txt="MET "+fmt(r.met,1)+" · "+fmt(r.kg,1)+" kg";
+  if(r.t==="gym"&&r.d.vol>0)txt="Volumen "+fmt(r.d.vol)+" kg · "+fmt(r.d.nsets)+" series"+(r.d.src==="volumen"?" · intensidad según carga":"")+"<br>"+txt;
   if(r.d.km>0&&r.d.speed)txt=fmt(r.d.km,2)+" km · "+fmt(r.d.speed,1)+" km/h"+(r.d.src==="ritmo"?" (est.)":"")+"<br>"+txt;
   dd.innerHTML=txt;
   if(r.warn){w.textContent=r.warn;w.classList.remove("hide");}else w.classList.add("hide");
@@ -470,7 +521,12 @@ function prefill(w){
 function startEdit(id){
   var w=state.workouts.filter(function(x){return x.id===id;})[0];if(!w)return;
   ui.editId=id;ui.type=w.type;ui.tab="registrar";
-  ui.gymRows=(w.d&&w.d.ex&&w.d.ex.length)?w.d.ex.map(function(e){var m=e.m&&MUSCLES[e.m]?e.m:"";var inCat=m&&MUSCLES[m].indexOf(e.n)>=0;return {m:m,e:inCat?e.n:"__otro",n:e.n,s:e.rs!=null?e.rs:String(e.s||""),r:e.rr!=null?e.rr:String(e.r||""),k:e.rk!=null?e.rk:String(e.k||"")};}):[blankRow()];
+  ui.gymRows=(w.d&&w.d.ex&&w.d.ex.length)?w.d.ex.map(function(e){
+    var m=e.m&&MUSCLES[e.m]?e.m:"";var inCat=m&&MUSCLES[m].indexOf(e.n)>=0;
+    var st=setsOf(e).map(function(x){return {r:x.rr!=null?x.rr:String(x.r),k:x.rk!=null?x.rk:String(x.k||"")};});
+    if(!st.length)st=[blankSet()];
+    return {m:m,e:inCat?e.n:"__otro",n:e.n,sets:st};
+  }):[blankRow()];
   render();prefill(w);window.scrollTo(0,0);
 }
 function saveWorkout(){
@@ -498,7 +554,7 @@ function detailOf(w){
   if(w.type==="walk"&&d.steps)parts.push(fmt(d.steps)+" pasos");
   if(w.type==="bike"&&d.src==="ritmo"&&d.in&&BIKE_INT[d.in.bint])parts.push(BIKE_INT[d.in.bint].label.split(" (")[0]);
   if(w.type==="swim"){if(d.m)parts.push(fmt(d.m)+" m");if(d.in&&SWIM_INT[d.in.sint])parts.push(SWIM_INT[d.in.sint].label.split(" (")[0]);}
-  if(w.type==="gym")parts.push((GYM_KINDS[d.kind]?GYM_KINDS[d.kind].label.split(" (")[0]:"Gym")+" · "+(INTENS[d.int]||""));
+  if(w.type==="gym")parts.push((GYM_KINDS[d.kind]?GYM_KINDS[d.kind].label.split(" (")[0]:"Gym")+" · "+(d.src==="volumen"?"intensidad según carga":(INTENS[d.int]||"")));
   if(w.type==="football"){parts.push(FUT[d.lv]?FUT[d.lv].label:"Partido");if(d.goals)parts.push(d.goals+(d.goals===1?" gol":" goles"));if(d.ast)parts.push(d.ast+(d.ast===1?" asistencia":" asistencias"));}
   return parts.join(" · ");
 }
@@ -512,10 +568,12 @@ function viewHistorial(){
     var kc=kcalOf(w);dayK+=kc;
     var T=TYPES[w.type];
     var ex="";
-    if(w.d&&w.d.ex){ex='<div class="dd">'+w.d.ex.map(function(e){
-      var s=(e.m?esc(e.m)+": ":"")+esc(e.n);if(e.s&&e.r)s+=" "+e.s+"×"+e.r;if(e.k)s+=" @ "+fmt(e.k,1)+" kg";return s;}).join(" · ")+'</div>';
-      var vol=w.d.ex.reduce(function(a,e){return a+e.s*e.r*e.k;},0);
-      if(vol>0)ex+='<div class="dd">Volumen total: '+fmt(vol)+' kg</div>';}
+    if(w.d&&w.d.ex){
+      ex=w.d.ex.map(function(e){
+        var st=setsOf(e),line='<div class="dd">'+(e.m?esc(e.m)+": ":"")+'<b>'+esc(e.n)+'</b>'+(st.length?" — "+esc(setsText(st)):"")+'</div>';
+        return line;}).join("");
+      var vol=w.d.vol>0?w.d.vol:w.d.ex.reduce(function(a,e){return a+setsOf(e).reduce(function(b,x){return b+x.r*x.k;},0);},0);
+      if(vol>0)ex+='<div class="dd">Volumen levantado: '+fmt(vol)+' kg'+(w.d.src==="volumen"?" · intensidad según carga":"")+'</div>';}
     var sure=ui.confirmDel===w.id;
     buf+='<div class="item"><div class="ico" style="background:color-mix(in srgb,'+T.color+' 18%,transparent)">'+T.icon+'</div>'
       +'<div class="main"><div class="tt">'+T.label+'</div><div class="dd">'+esc(detailOf(w))+'</div>'+ex
@@ -589,12 +647,12 @@ function viewPerfil(){
    +'<div class="card"><h2>Metas semanales</h2><div class="sub">Opcional. Aparecen en Resumen, de lunes a domingo.</div>'
    +'<div class="row"><div><label for="g-k">Calorías por semana</label><input id="g-k" type="text" inputmode="numeric" autocomplete="off" data-dec="1" value="'+esc(g.kcal)+'" placeholder="Ej: 2000"></div>'
    +'<div><label for="g-s">Actividades por semana</label><input id="g-s" type="text" inputmode="numeric" autocomplete="off" data-dec="1" value="'+esc(g.sessions)+'" placeholder="Ej: 4"></div></div></div>'
-   +'<div class="card"><h2>Cómo se calcula</h2><div class="sub">Calorías = MET × gasto en reposo por hora × horas. El MET depende de la actividad:<br>• Caminata y correr: según tu velocidad real (fórmula ACSM).<br>• Bicicleta: según tu velocidad media o la intensidad elegida.<br>• Natación, gym y fútbol: valores del Compendio de Actividades Físicas según tipo e intensidad.<br>• Con edad y sexo, el gasto en reposo sale de la fórmula Mifflin-St Jeor (peso, estatura, edad, sexo). Sin ellos se usa 1 kcal por kg por hora.<br>• Tu estatura también convierte pasos en distancia.<br><br>Es una estimación con margen de ±20–30 %: no considera composición corporal, pendiente, viento ni pulsaciones. Úsala para comparar semana a semana, no como cifra exacta.</div></div>'
+   +'<div class="card"><h2>Cómo se calcula</h2><div class="sub">Calorías = MET × gasto en reposo por hora × horas. El MET depende de la actividad:<br>• Caminata y correr: según tu velocidad real (fórmula ACSM).<br>• Bicicleta: según tu velocidad media o la intensidad elegida.<br>• Natación, gym y fútbol: valores del Compendio de Actividades Físicas según tipo e intensidad.<br>• Pesas con kg por serie: la intensidad se interpola entre MET 3,5 y 6 según el volumen que levantas (reps × kg) por minuto y por kg de tu peso. Es una aproximación propia: más carga y menos pausa, más calorías.<br>• Con edad y sexo, el gasto en reposo sale de la fórmula Mifflin-St Jeor (peso, estatura, edad, sexo). Sin ellos se usa 1 kcal por kg por hora.<br>• Tu estatura también convierte pasos en distancia.<br><br>Es una estimación con margen de ±20–30 %: no considera composición corporal, pendiente, viento ni pulsaciones. Úsala para comparar semana a semana, no como cifra exacta.</div></div>'
    +'<div class="card"><h2>Respaldo</h2><div class="sub">Tus datos viven solo en este dispositivo. Descarga un respaldo de vez en cuando; si cambias de celular o borras los datos del navegador, lo restauras aquí.</div>'
    +'<button class="btn" id="bk" style="margin-top:12px">Descargar respaldo (JSON)</button>'
    +'<label class="btn ghost" for="rs" style="display:block;text-align:center;cursor:pointer">Restaurar respaldo</label><input id="rs" type="file" accept="application/json,.json" class="hide">'
    +'<button class="btn ghost" id="csv">Copiar historial (CSV)</button></div>'
-   +'<div class="card"><h2>Versión v6</h2><div class="sub">Si publiqué cambios y no los ves, toca el botón. No borra tus datos.</div><button class="btn ghost" id="upd">Buscar actualización</button></div>';
+   +'<div class="card"><h2>Versión v7</h2><div class="sub">Si publiqué cambios y no los ves, toca el botón. No borra tus datos.</div><button class="btn ghost" id="upd">Buscar actualización</button></div>';
 }
 function csv(){
   var rows=[["fecha","tipo","minutos","kcal","met","detalle","nota"]];
@@ -622,6 +680,8 @@ document.addEventListener("click",function(e){
     else ui.confirmDel=t.dataset.delw;
     render();return;
   }
+  if(t.dataset.addset!==undefined){var rw=ui.gymRows[+t.dataset.addset];var last=rw.sets[rw.sets.length-1]||blankSet();rw.sets.push({r:last.r,k:last.k});$("exrows").innerHTML=gymRowsHtml();updatePreview();return;}
+  if(t.dataset.rmset!==undefined){var pr=t.dataset.rmset.split(":");var r2=ui.gymRows[+pr[0]];r2.sets.splice(+pr[1],1);if(!r2.sets.length)r2.sets=[blankSet()];$("exrows").innerHTML=gymRowsHtml();updatePreview();return;}
   if(t.id==="addex"){ui.gymRows.push(blankRow());$("exrows").innerHTML=gymRowsHtml();return;}
   if(t.dataset.rmex!==undefined){ui.gymRows.splice(+t.dataset.rmex,1);if(!ui.gymRows.length)ui.gymRows=[blankRow()];$("exrows").innerHTML=gymRowsHtml();updatePreview();return;}
   if(t.dataset.del){
@@ -659,6 +719,7 @@ function refreshInfo(){var n=$("p-info");if(n)n.innerHTML=infoHtml();}
 document.addEventListener("input",function(e){
   var el=e.target;
   if(el.dataset&&el.dataset.dec){var c=el.value.replace(/[^0-9.,]/g,"");if(c!==el.value)el.value=c;}
+  if(el.dataset&&el.dataset.set!==undefined){ui.gymRows[+el.dataset.i].sets[+el.dataset.j][el.dataset.set]=el.value;updatePreview();return;}
   if(el.dataset&&el.dataset.ex!==undefined){if(el.tagName==="SELECT")return;ui.gymRows[+el.dataset.i][el.dataset.ex]=el.value;updatePreview();return;}
   if(el.id==="p-w"){var kg=num(el.value);if(kg>=25&&kg<=300&&Math.abs(kg-(currentWeight()||0))>1e-9){upsertWeight(today(),kg);persist();refreshInfo();}return;}
   if(el.id==="p-h"){state.profile.height=el.value;persist();refreshInfo();return;}
