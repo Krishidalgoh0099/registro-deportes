@@ -110,7 +110,7 @@ svg text{fill:var(--mute);font-size:10px;font-family:inherit}
 <body>
 <div class="wrap">
   <h1>Registro de Deportes</h1>
-  <div class="sub" id="status">Guardado en este dispositivo · v4</div>
+  <div class="sub" id="status">Guardado en este dispositivo · v5</div>
   <div id="view"></div>
 </div>
 <nav class="tabs"><div id="tabs"></div></nav>
@@ -567,7 +567,8 @@ function viewPerfil(){
    +'<div class="card"><h2>Respaldo</h2><div class="sub">Tus datos viven solo en este dispositivo. Descarga un respaldo de vez en cuando; si cambias de celular o borras los datos del navegador, lo restauras aquí.</div>'
    +'<button class="btn" id="bk" style="margin-top:12px">Descargar respaldo (JSON)</button>'
    +'<label class="btn ghost" for="rs" style="display:block;text-align:center;cursor:pointer">Restaurar respaldo</label><input id="rs" type="file" accept="application/json,.json" class="hide">'
-   +'<button class="btn ghost" id="csv">Copiar historial (CSV)</button></div>';
+   +'<button class="btn ghost" id="csv">Copiar historial (CSV)</button></div>'
+   +'<div class="card"><h2>Versión v5</h2><div class="sub">Si publiqué cambios y no los ves, toca el botón. No borra tus datos.</div><button class="btn ghost" id="upd">Buscar actualización</button></div>';
 }
 function csv(){
   var rows=[["fecha","tipo","minutos","kcal","met","detalle","nota"]];
@@ -609,6 +610,17 @@ document.addEventListener("click",function(e){
       document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(a.href);},2000);
       toast("Respaldo descargado");
     }catch(err){toast("No se pudo descargar");}
+    return;
+  }
+  if(t.id==="upd"){
+    toast("Actualizando…");
+    (async function(){
+      try{
+        if(navigator.serviceWorker){var rs=await navigator.serviceWorker.getRegistrations();for(var i=0;i<rs.length;i++)await rs[i].unregister();}
+        if(window.caches){var ks=await caches.keys();for(var j=0;j<ks.length;j++)await caches.delete(ks[j]);}
+      }catch(err){}
+      location.replace(location.pathname+"?u="+Date.now());
+    })();
     return;
   }
   if(t.id==="csv"){
